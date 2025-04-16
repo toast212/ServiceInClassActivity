@@ -11,11 +11,8 @@ import android.util.Log
 class TimerService : Service() {
 
     private var isRunning = false
-
     private var timerHandler : Handler? = null
-
     lateinit var t: TimerThread
-
     private var paused = false
 
     inner class TimerBinder : Binder() {
@@ -30,14 +27,13 @@ class TimerService : Service() {
 
         // Start a new timer
         fun start(startValue: Int){
-
             if (!paused) {
                 if (!isRunning) {
                     if (::t.isInitialized) t.interrupt()
                     this@TimerService.start(startValue)
                 }
             } else {
-                pause()
+                pause() // This will unpause if already paused
             }
         }
 
@@ -57,12 +53,10 @@ class TimerService : Service() {
         fun pause() {
             this@TimerService.pause()
         }
-
     }
 
     override fun onCreate() {
         super.onCreate()
-
         Log.d("TimerService status", "Created")
     }
 
@@ -83,42 +77,35 @@ class TimerService : Service() {
     }
 
     inner class TimerThread(private val startValue: Int) : Thread() {
-
         override fun run() {
             isRunning = true
             try {
                 for (i in startValue downTo 1)  {
                     Log.d("Countdown", i.toString())
-
                     timerHandler?.sendEmptyMessage(i)
 
                     while (paused);
                     sleep(1000)
-
                 }
                 isRunning = false
+                paused = false
             } catch (e: InterruptedException) {
                 Log.d("Timer interrupted", e.toString())
                 isRunning = false
                 paused = false
             }
         }
-
     }
 
     override fun onUnbind(intent: Intent?): Boolean {
         if (::t.isInitialized) {
             t.interrupt()
         }
-
         return super.onUnbind(intent)
     }
 
     override fun onDestroy() {
         super.onDestroy()
-
         Log.d("TimerService status", "Destroyed")
     }
-
-
 }
